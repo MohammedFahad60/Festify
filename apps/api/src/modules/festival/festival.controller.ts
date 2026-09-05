@@ -150,6 +150,13 @@ export async function createFestivalController(
           message: "Venue not found",
         });
       }
+
+      if (error.message === "INVALID_DATE_RANGE") {
+        return res.status(400).json({
+          success: false,
+          message: "End date must be after start date",
+        });
+      }
     }
 
     console.error("Create festival error:", error);
@@ -173,9 +180,14 @@ export async function submitFestivalController(
       });
     }
 
+    const id = idSchema.safeParse(req.params.id);
+    if (!id.success) {
+      return res.status(400).json({ success: false, message: "Invalid festival ID" });
+    }
+
     const festival = await submitFestival(
       req.user.id,
-      String(req.params.id)
+      id.data
     );
 
     return res.json({
@@ -244,9 +256,14 @@ export async function publishFestivalController(
       });
     }
 
+    const id = idSchema.safeParse(req.params.id);
+    if (!id.success) {
+      return res.status(400).json({ success: false, message: "Invalid festival ID" });
+    }
+
     const festival = await publishFestival(
       req.user.id,
-      String(req.params.id)
+      id.data
     );
 
     return res.json({
@@ -331,7 +348,11 @@ export async function getPublishedFestivalController(
   res: Response
 ) {
   try {
-    const festival = await getPublishedFestival(String(req.params.id));
+    const id = idSchema.safeParse(req.params.id);
+    if (!id.success) {
+      return res.status(400).json({ success: false, message: "Invalid festival ID" });
+    }
+    const festival = await getPublishedFestival(id.data);
 
     return res.json({
       success: true,
@@ -370,7 +391,9 @@ export async function listOrganizerFestivalsController(req: AuthenticatedRequest
 export async function getOrganizerFestivalController(req: AuthenticatedRequest, res: Response) {
   try {
     if (!req.user) return res.status(401).json({ success: false, message: "Authentication required" });
-    return res.json({ success: true, data: { festival: await getOrganizerFestival(req.user.id, String(req.params.id)) } });
+    const id = idSchema.safeParse(req.params.id);
+    if (!id.success) return res.status(400).json({ success: false, message: "Invalid festival ID" });
+    return res.json({ success: true, data: { festival: await getOrganizerFestival(req.user.id, id.data) } });
   } catch (error) {
     if (error instanceof Error && error.message === "FESTIVAL_NOT_FOUND") return res.status(404).json({ success: false, message: "Festival not found" });
     if (error instanceof Error && ["ORGANIZER_NOT_FOUND", "ORGANIZER_NOT_APPROVED"].includes(error.message)) return res.status(403).json({ success: false, message: "Approved organizer access required" });

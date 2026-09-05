@@ -203,7 +203,7 @@ export async function me(
       data: {
         user: {
           ...user,
-          roles: user.roles.map((item) => item.role.name),
+          roles: user.roles.map((item: { role: { name: string } }) => item.role.name),
         },
       },
     });

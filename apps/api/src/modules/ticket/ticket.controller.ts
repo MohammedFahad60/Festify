@@ -13,6 +13,10 @@ const ticketCodeSchema = z.string().trim().min(1).max(100);
 
 function ticketError(error: unknown, res: Response, operation: string) {
   if (error instanceof Error) {
+    const code = (error as unknown as { code?: string }).code;
+    if (code === "P2034" || error.message.includes("P2034") || error.message.includes("TransactionWriteConflict")) {
+      return res.status(409).json({ success: false, message: "Concurrent request, please retry" });
+    }
     const responses: Record<string, { status: number; message: string }> = {
       ORGANIZER_NOT_FOUND: { status: 403, message: "Organizer profile required" },
       TICKET_NOT_FOUND: { status: 404, message: "Ticket not found" },

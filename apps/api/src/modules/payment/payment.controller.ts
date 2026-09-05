@@ -17,6 +17,10 @@ function getValidatedId(value: string | undefined) {
 
 function handlePaymentError(error: unknown, res: Response, operation: string) {
   if (error instanceof Error) {
+    const code = (error as unknown as { code?: string }).code;
+    if (code === "P2034" || error.message.includes("P2034") || error.message.includes("TransactionWriteConflict")) {
+      return res.status(409).json({ success: false, message: "Concurrent request, please retry" });
+    }
     const responses: Record<string, { status: number; message: string }> = {
       ORDER_NOT_FOUND: { status: 404, message: "Order not found" },
       ORDER_NOT_OWNED: { status: 403, message: "You do not own this order" },

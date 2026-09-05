@@ -40,7 +40,7 @@ export async function createOrder(
     );
   }
 
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: any) => {
     const festival = await tx.festival.findUnique({
       where: {
         id: input.festivalId,
@@ -162,7 +162,7 @@ export async function createOrder(
 }
 
 export async function confirmOrder(userId: string, orderId: string) {
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: any) => {
         const order = await tx.order.findUnique({
             where: {
                 id: orderId,
@@ -249,7 +249,7 @@ export async function getUserOrder(userId: string, orderId: string) {
 }
 
 export async function cancelOrder(userId: string, orderId: string) {
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: any) => {
     const order = await tx.order.findUnique({
       where: {
         id: orderId,
@@ -273,7 +273,7 @@ export async function cancelOrder(userId: string, orderId: string) {
       throw new Error("ORDER_NOT_CANCELLABLE");
     }
 
-    if (order.payments.some((payment) => payment.status === "SUCCESS")) {
+    if (order.payments.some((payment: { status: string }) => payment.status === "SUCCESS")) {
       throw new Error("ORDER_HAS_SUCCESSFUL_PAYMENT");
     }
 

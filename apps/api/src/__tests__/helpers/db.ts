@@ -38,7 +38,7 @@ export async function cleanupTestData() {
       where: { email: { startsWith: "test-" } },
       select: { id: true },
     })
-  ).map((u) => u.id);
+  ).map((u: { id: string }) => u.id);
 
   // Find organizers linked to test users
   const testOrganizerIds = (
@@ -46,7 +46,7 @@ export async function cleanupTestData() {
       where: { userId: { in: testUserIds } },
       select: { id: true },
     })
-  ).map((o) => o.id);
+  ).map((o: { id: string }) => o.id);
 
   // Find festivals linked to test organizers
   const testFestivalIds = (
@@ -54,7 +54,7 @@ export async function cleanupTestData() {
       where: { organizerId: { in: testOrganizerIds } },
       select: { id: true },
     })
-  ).map((f) => f.id);
+  ).map((f: { id: string }) => f.id);
 
   // Find orders linked to test users
   const testOrderIds = (
@@ -62,7 +62,7 @@ export async function cleanupTestData() {
       where: { userId: { in: testUserIds } },
       select: { id: true },
     })
-  ).map((o) => o.id);
+  ).map((o: { id: string }) => o.id);
 
   // Also find orders linked to test festivals (from any user in test context)
   const testFestivalOrderIds = (
@@ -70,7 +70,7 @@ export async function cleanupTestData() {
       where: { festivalId: { in: testFestivalIds } },
       select: { id: true },
     })
-  ).map((o) => o.id);
+  ).map((o: { id: string }) => o.id);
 
   const allOrderIds = [...new Set([...testOrderIds, ...testFestivalOrderIds])];
 

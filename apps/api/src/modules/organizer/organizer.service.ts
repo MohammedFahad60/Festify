@@ -62,7 +62,7 @@ export async function approveOrganizerProfile(
     throw new Error("ORGANIZER_ROLE_NOT_FOUND");
   }
 
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: any) => {
     const updatedOrganizer = await tx.organizer.update({
       where: {
         id: organizer.id,

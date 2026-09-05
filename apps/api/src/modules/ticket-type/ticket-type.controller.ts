@@ -53,6 +53,10 @@ export async function createTicketTypeController(
     }
 
     const festivalId = String(req.params.festivalId);
+    const festivalIdCheck = z.string().uuid().safeParse(festivalId);
+    if (!festivalIdCheck.success) {
+      return res.status(400).json({ success: false, message: "Invalid festival ID" });
+    }
 
     const result = createTicketTypeSchema.safeParse(req.body);
 

@@ -64,8 +64,8 @@ prisma/.db
 prisma/.db-journal
 
 Generated Prisma Client
-Uncomment if your generated client is reproducible during install/build:
-apps/api/src/generated/
+# Keep stub for offline builds; real client is generated via `prisma generate` (requires network)
+# apps/api/src/generated/
 Test artifacts
 
 .nyc_output/

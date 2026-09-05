@@ -162,7 +162,7 @@ function getTicketValidity(ticket: {
 }
 
 export async function validateTicket(userId: string, ticketCode: string) {
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: any) => {
     const organizerId = await getOrganizerId(tx, userId);
     const ticket = await findScannableTicket(tx, organizerId, ticketCode);
     const validity = getTicketValidity(ticket);
@@ -176,7 +176,7 @@ export async function validateTicket(userId: string, ticketCode: string) {
 }
 
 export async function checkInTicket(userId: string, ticketCode: string) {
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: any) => {
     const organizerId = await getOrganizerId(tx, userId);
     const ticket = await findScannableTicket(tx, organizerId, ticketCode);
     const validity = getTicketValidity(ticket);

@@ -28,6 +28,14 @@ function getValidatedId(value: string | undefined) {
 
 function handleOrderError(error: unknown, res: Response, operation: string) {
   if (error instanceof Error) {
+    // Prisma serialization failures (P2034) occur under high concurrency; map to 409 for retry
+    const code = (error as unknown as { code?: string }).code;
+    if (code === "P2034" || error.message.includes("P2034") || error.message.includes("TransactionWriteConflict")) {
+      return res.status(409).json({
+        success: false,
+        message: "Concurrent request, please retry",
+      });
+    }
     const responses: Record<string, { status: number; message: string }> = {
       FESTIVAL_NOT_FOUND: { status: 404, message: "Festival not found" },
       FESTIVAL_NOT_PUBLISHED: { status: 409, message: "Festival is not published" },
@@ -45,6 +53,7 @@ function handleOrderError(error: unknown, res: Response, operation: string) {
       ORDER_NOT_CANCELLABLE: { status: 409, message: "Order cannot be cancelled" },
       ORDER_HAS_SUCCESSFUL_PAYMENT: { status: 409, message: "Order with a successful payment cannot be cancelled before refunds are implemented" },
       INVENTORY_RESTORE_FAILED: { status: 409, message: "Unable to restore ticket inventory" },
+      INVALID_DATE_RANGE: { status: 400, message: "End date must be after start date" },
     };
     const response = responses[error.message];
     if (response) {

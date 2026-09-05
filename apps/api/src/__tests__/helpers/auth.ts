@@ -100,7 +100,7 @@ export async function createMultiRoleUser(
   const passwordHash = await bcrypt.hash("TestPassword123!", 12);
 
   const roleRecords = await Promise.all(
-    roles.map((name) =>
+    roles.map((name: string) =>
       testPrisma.role.findUnique({ where: { name: name as any } })
     )
   );
@@ -113,8 +113,8 @@ export async function createMultiRoleUser(
       status: "ACTIVE",
       roles: {
         create: roleRecords
-          .filter((r) => r !== null)
-          .map((r) => ({ roleId: r!.id })),
+          .filter((r: any) => r !== null)
+          .map((r: any) => ({ roleId: r!.id })),
       },
     },
   });

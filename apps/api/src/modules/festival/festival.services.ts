@@ -62,6 +62,12 @@ export async function createFestival(
     throw new Error("VENUE_NOT_FOUND");
   }
 
+  const startDate = new Date(input.startDate);
+  const endDate = new Date(input.endDate);
+  if (startDate >= endDate) {
+    throw new Error("INVALID_DATE_RANGE");
+  }
+
   const baseSlug = createSlug(input.name);
 
   let slug = baseSlug;

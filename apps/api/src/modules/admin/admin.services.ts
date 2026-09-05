@@ -24,7 +24,7 @@ export async function getPendingOrganizers() {
 }
 
 export async function approveOrganizer(organizerId: string) {
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: any) => {
     const organizer = await tx.organizer.findUnique({
       where: {
         id: organizerId,

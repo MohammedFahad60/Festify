@@ -1,0 +1,281 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../apps/api/src/generated/prisma"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  BANNED
+  SUSPENDED
+}
+
+enum OrganizerVerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum FestivalStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  PUBLISHED
+  REJECTED
+  ONGOING
+  COMPLETED
+  ARCHIVED
+}
+
+enum TicketTypeStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  CREATED
+  PENDING
+  SUCCESS
+  FAILED
+  CANCELLED
+}
+
+enum TicketStatus {
+  ACTIVE
+  USED
+  CANCELLED
+}
+
+enum CategoryStatus {
+  ACTIVE
+  INACTIVE
+}
+
+// Models
+
+model User {
+  id           String     @id @default(uuid())
+  name         String
+  email        String     @unique
+  phone        String?
+  passwordHash String
+  profileImage String?
+  status       UserStatus @default(ACTIVE)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  roles      UserRole[]
+  organizer  Organizer?
+  orders     Order[]
+  tickets    Ticket[]
+}
+
+model Role {
+  id        String     @id @default(uuid())
+  name      String     @unique
+  createdAt DateTime   @default(now())
+  users     UserRole[]
+}
+
+model UserRole {
+  userId String
+  roleId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+}
+
+model Organizer {
+  id                 String                       @id @default(uuid())
+  userId             String                       @unique
+  organizationName   String
+  description        String?
+  contactEmail       String
+  contactPhone       String?
+  verificationStatus OrganizerVerificationStatus @default(PENDING)
+  createdAt          DateTime                     @default(now())
+  updatedAt          DateTime                     @updatedAt
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  festivals Festival[]
+}
+
+model Category {
+  id        String         @id @default(uuid())
+  name      String         @unique
+  slug      String         @unique
+  status    CategoryStatus @default(ACTIVE)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  festivals Festival[]
+}
+
+model Venue {
+  id        String   @id @default(uuid())
+  name      String
+  address   String
+  city      String
+  state     String
+  country   String
+  capacity  Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  festivals Festival[]
+}
+
+model Festival {
+  id                 String        @id @default(uuid())
+  organizerId        String
+  categoryId         String
+  venueId            String
+  name               String
+  slug               String        @unique
+  description        String?
+  banner             String?
+  startDate          DateTime
+  endDate            DateTime
+  startTime          String?
+  endTime            String?
+  capacity           Int?
+  status             FestivalStatus @default(DRAFT)
+  cancellationPolicy Json?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  organizer   Organizer      @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  category    Category       @relation(fields: [categoryId], references: [id])
+  venue       Venue          @relation(fields: [venueId], references: [id])
+  ticketTypes TicketType[]
+  images      FestivalImage[]
+  orders      Order[]
+
+  @@index([organizerId])
+  @@index([status])
+  @@index([slug])
+}
+
+model FestivalImage {
+  id         String   @id @default(uuid())
+  festivalId String
+  imageUrl   String
+  altText    String?
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  festival Festival @relation(fields: [festivalId], references: [id], onDelete: Cascade)
+
+  @@index([festivalId])
+}
+
+model TicketType {
+  id           String           @id @default(uuid())
+  festivalId   String
+  name         String
+  description  String?
+  price        Decimal          @db.Decimal(10, 2)
+  quantity     Int
+  soldQuantity Int              @default(0)
+  saleStart    DateTime
+  saleEnd      DateTime
+  maxPerUser   Int?
+  status       TicketTypeStatus @default(ACTIVE)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  festival   Festival    @relation(fields: [festivalId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+  tickets    Ticket[]
+
+  @@index([festivalId])
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  userId      String
+  festivalId  String
+  status      OrderStatus @default(PENDING)
+  totalAmount Decimal     @db.Decimal(10, 2)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  user     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  festival Festival    @relation(fields: [festivalId], references: [id])
+  items    OrderItem[]
+  payments Payment[]
+  tickets  Ticket[]
+
+  @@index([userId])
+  @@index([festivalId])
+  @@index([status])
+}
+
+model OrderItem {
+  id           String  @id @default(uuid())
+  orderId      String
+  ticketTypeId String
+  quantity     Int
+  unitPrice    Decimal @db.Decimal(10, 2)
+  totalPrice   Decimal @db.Decimal(10, 2)
+
+  order      Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  ticketType TicketType @relation(fields: [ticketTypeId], references: [id])
+
+  @@index([orderId])
+  @@index([ticketTypeId])
+}
+
+model Payment {
+  id                String        @id @default(uuid())
+  orderId           String
+  provider          String        @default("MOCK")
+  providerPaymentId String?
+  amount            Decimal       @db.Decimal(10, 2)
+  currency          String        @default("INR")
+  status            PaymentStatus @default(CREATED)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([status])
+}
+
+model Ticket {
+  id           String       @id @default(uuid())
+  orderId      String
+  ticketTypeId String
+  userId       String
+  ticketCode   String       @unique
+  status       TicketStatus @default(ACTIVE)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  order      Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  ticketType TicketType @relation(fields: [ticketTypeId], references: [id])
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([userId])
+  @@index([ticketCode])
+  @@index([status])
+}

@@ -58,7 +58,7 @@ export async function requireAuth(
 
     req.user = {
       id: user.id,
-      roles: user.roles.map((userRole) => userRole.role.name),
+      roles: user.roles.map((userRole: { role: { name: string } }) => userRole.role.name),
     };
 
     next();
@@ -98,11 +98,11 @@ export async function optionalAuth(
     
     req.user = {
       id: user.id,
-      roles: user.roles.map((userRole) => userRole.role.name),
+      roles: user.roles.map((userRole: { role: { name: string } }) => userRole.role.name),
     };
     
     next();
-  } catch (error) {
+  } catch (_error) {
     next();
   }
 }

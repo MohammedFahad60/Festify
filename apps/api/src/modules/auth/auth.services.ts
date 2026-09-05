@@ -136,7 +136,7 @@ export async function loginUser(input: LoginInput) {
       phone: user.phone,
       profileImage: user.profileImage,
       status: user.status,
-      roles: user.roles.map((userRole) => userRole.role.name),
+      roles: user.roles.map((userRole: { role: { name: string } }) => userRole.role.name),
     },
   };
 }

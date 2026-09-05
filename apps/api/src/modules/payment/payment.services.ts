@@ -56,7 +56,7 @@ const paymentSelect = {
 } as const;
 
 export async function createPayment(userId: string, orderId: string) {
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: any) => {
     const order = await tx.order.findUnique({
       where: {
         id: orderId,
@@ -179,7 +179,7 @@ async function findOwnedPayment(
 }
 
 export async function markPaymentSuccess(userId: string, paymentId: string) {
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: any) => {
     const payment = await findOwnedPayment(tx, userId, paymentId);
 
     if (payment.status === "SUCCESS") {
@@ -243,7 +243,7 @@ export async function markPaymentSuccess(userId: string, paymentId: string) {
 }
 
 export async function markPaymentFailed(userId: string, paymentId: string) {
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: any) => {
     const payment = await findOwnedPayment(tx, userId, paymentId);
 
     if (!["CREATED", "PENDING"].includes(payment.status)) {
