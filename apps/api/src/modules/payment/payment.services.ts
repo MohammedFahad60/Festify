@@ -187,6 +187,12 @@ export async function markPaymentSuccess(userId: string, paymentId: string) {
         where: { id: payment.orderId },
         include: { items: true },
       });
+      if (order.status === "PENDING") {
+        await tx.order.updateMany({
+          where: { id: payment.orderId, status: "PENDING" },
+          data: { status: "CONFIRMED" },
+        });
+      }
       await issueTickets(tx, order.id, order.userId, order.items);
 
       return tx.payment.findUniqueOrThrow({
@@ -205,14 +211,23 @@ export async function markPaymentSuccess(userId: string, paymentId: string) {
 
     const providerPaymentId = `mock_${randomUUID()}`;
 
-    const updatedPayment = await tx.payment.update({
+    const updatedCount = await tx.payment.updateMany({
       where: {
         id: paymentId,
+        status: { in: ["CREATED", "PENDING"] },
       },
       data: {
         status: "SUCCESS",
         providerPaymentId,
       },
+    });
+
+    if (updatedCount.count !== 1) {
+      throw new Error("PAYMENT_NOT_PENDING");
+    }
+
+    const updatedPayment = await tx.payment.findUniqueOrThrow({
+      where: { id: paymentId },
       select: paymentSelect,
     });
 
@@ -254,14 +269,25 @@ export async function markPaymentFailed(userId: string, paymentId: string) {
       throw new Error("ORDER_NOT_PENDING");
     }
 
-    return tx.payment.update({
+    const updated = await tx.payment.updateMany({
       where: {
         id: paymentId,
+        status: { in: ["CREATED", "PENDING"] },
       },
       data: {
         status: "FAILED",
       },
+    });
+
+    if (updated.count !== 1) {
+      throw new Error("PAYMENT_NOT_PENDING");
+    }
+
+    return tx.payment.findUniqueOrThrow({
+      where: { id: paymentId },
       select: paymentSelect,
     });
+  }, {
+    isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
   });
 }
