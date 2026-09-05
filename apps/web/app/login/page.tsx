@@ -1,10 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { api } from "@/lib/api";
-import { Card, Button, Input, Label } from "@/components/ui";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { api, friendlyError } from "@/lib/api";
+import { Card, Button, Input, Label, Alert, Skeleton } from "@/components/ui";
 
-export default function LoginPage() {
+export const dynamic = "force-dynamic";
+
+function LoginInner() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect") || "/";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -13,11 +19,19 @@ export default function LoginPage() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email || !password) {
+      setError("Please enter both email and password.");
+      return;
+    }
     setLoading(true);
     setError(null);
     const res = await api.post("/api/auth/login", { email, password });
-    if (res.success) setSuccess(true);
-    else setError(res.message || "Login failed");
+    if (res.success) {
+      setSuccess(true);
+      setTimeout(() => router.push(redirect as any), 600);
+    } else {
+      setError(friendlyError(res.message, res.status));
+    }
     setLoading(false);
   };
 
@@ -26,23 +40,32 @@ export default function LoginPage() {
       <Card className="p-8 animate-fade-in-up">
         <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
         <p className="text-sm text-stone-500 mt-1">Sign in to continue to Festify</p>
-        <form onSubmit={onSubmit} className="mt-6 space-y-4">
+        <form onSubmit={onSubmit} className="mt-6 space-y-4" noValidate>
           <div>
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1" />
+            <Input id="email" type="email" autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1" aria-describedby={error ? "login-error" : undefined} />
           </div>
           <div>
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required className="mt-1" />
+            <Input id="password" type="password" autoComplete="current-password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required className="mt-1" />
           </div>
-          {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl p-3">{error}</p>}
-          {success && <p className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl p-3">Login successful — redirecting...</p>}
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? "Signing in..." : "Sign in"}
+          {error && <Alert variant="error"><span id="login-error">{error}</span></Alert>}
+          {success && <Alert variant="success">Login successful — redirecting to {redirect === "/" ? "Explore" : redirect}...</Alert>}
+          <Button type="submit" isLoading={loading} className="w-full">
+            Sign in
           </Button>
-          <p className="text-xs text-center text-stone-500">No account? <a href="#" className="underline hover:text-stone-900">Create one</a></p>
+          <p className="text-xs text-center text-stone-500">Demo: use your seeded attendee / organizer / admin account.</p>
+          <p className="text-xs text-center text-stone-500">No account? <a href="#" className="underline hover:text-stone-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 rounded">Create one</a></p>
         </form>
       </Card>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<Skeleton className="h-64 w-full max-w-md mx-auto mt-8" />}>
+      <LoginInner />
+    </Suspense>
   );
 }
