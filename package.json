@@ -11,7 +11,7 @@
     "dev:web": "npm run dev --workspace=@festify/web",
     "dev:api": "npm run dev --workspace=@festify/api",
     "build": "npm run build --workspaces",
-    "lint": "npm run lint --workspaces"
+    "lint": "npm run lint --workspaces --if-present"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.1",

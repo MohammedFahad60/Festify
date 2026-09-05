@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { requireAuth } from "../../middleware/auth.js";
+import { rateLimit } from "../../middleware/rate-limit.js";
 import {
   cancelOrderController,
   confirmOrderController,
@@ -14,9 +15,9 @@ import {
 
 const router = Router();
 
-router.post("/", requireAuth, createOrderController);
+router.post("/", requireAuth, rateLimit({ windowMs: 60_000, max: 20 }), createOrderController);
 router.get("/", requireAuth, listOrdersController);
-router.post("/:id/payment", requireAuth, createPaymentController);
+router.post("/:id/payment", requireAuth, rateLimit({ windowMs: 60_000, max: 20 }), createPaymentController);
 router.get("/:id/payment", requireAuth, getOrderPaymentController);
 router.get("/:id", requireAuth, getOrderController);
 router.post("/:id/confirm", requireAuth, confirmOrderController);
