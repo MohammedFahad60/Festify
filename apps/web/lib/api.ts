@@ -1,7 +1,7 @@
 import type { ApiResponse } from "@festify/types";
+export type { DiscoveryEvent, DiscoveryTicketType, EventListResponse, PaginationMeta, User } from "@festify/types";
 export type Festival = {id:string;name:string;slug:string;description:string|null;banner:string|null;startDate:string;endDate:string;status:string;category:{name:string;slug:string};venue:{name:string;city:string;state:string};organizer:{organizationName:string};ticketTypes?:Array<{id:string;name:string;price:string|number;quantity:number;soldQuantity:number;status?:string;saleStart?:string;saleEnd?:string;maxPerUser?:number|null}>};
 export type Order = {id:string;status:string;totalAmount:string|number;createdAt:string;festival?:{name:string};items?:Array<{id:string;quantity:number;unitPrice:string;totalPrice:string;ticketType?:{name:string}}>;payments?:Array<{status:string}>;tickets?:Array<{id:string;ticketCode:string;status:string}>};
-
 export type FetchOptions = Omit<globalThis.RequestInit, "body"> & { params?: Record<string, string | number | boolean | undefined>; body?: unknown; retryAuth?: boolean };
 function makeUrl(path:string, params?:FetchOptions["params"]){const query=new URLSearchParams();Object.entries(params??{}).forEach(([key,value])=>value!==undefined&&query.set(key,String(value)));const suffix=query.toString();return suffix?`${path}${path.includes("?")?"&":"?"}${suffix}`:path;}
 async function parse<T>(response:Response):Promise<ApiResponse<T>>{const data=await response.json().catch(()=>undefined);if(data&&typeof data==="object")return {...data,status:response.status} as ApiResponse<T>;return {success:false,error:{code:response.status===401?"UNAUTHENTICATED":"INTERNAL_ERROR",message:"The server returned an invalid response."}};}
