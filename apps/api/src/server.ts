@@ -1,9 +1,8 @@
 import "./config/env.js";
-import app from "./app.js";
+import { createApp } from "./app.js";
 import { env } from "./config/env.js";
 
-console.log("Starting Festify API...");
-
+const app = createApp();
 app.listen(env.port, "0.0.0.0", () => {
-  console.log(`Festify API running at http://0.0.0.0:${env.port}`);
+  console.log(`Festify API listening on 0.0.0.0:${env.port}`);
 });
