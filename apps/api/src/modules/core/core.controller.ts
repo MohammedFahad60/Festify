@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import type { Request, Response } from "express";
-import { categorySchema,eventSchema,ticketTypeSchema,profileUpdateSchema,reviewSchema } from "@festify/validation";
+import { categorySchema,eventSchema,eventQuerySchema,ticketTypeSchema,profileUpdateSchema,reviewSchema } from "@festify/validation";
 import type { AuthenticatedRequest } from "../../middleware/auth.js";
 import { prisma } from "../../lib/prisma.js";
 import * as s from "./core.service.js";
@@ -11,7 +11,7 @@ export async function categories(_req:Request,res:Response){return res.json({suc
 export async function categoryCreate(req:AuthenticatedRequest,res:Response){const d=parse(res,categorySchema,req.body);if(!d)return;try{return res.status(201).json({success:true,data:await s.createCategory(d)})}catch(e){return fail(res,e)}}
 export async function categoryUpdate(req:AuthenticatedRequest,res:Response){const d=parse(res,categorySchema,req.body);if(!d)return;try{return res.json({success:true,data:await s.updateCategory(String(req.params.id),d)})}catch(e){return fail(res,e)}}
 export async function categoryDelete(req:AuthenticatedRequest,res:Response){try{return res.json({success:true,data:await s.deleteCategory(String(req.params.id))})}catch(e){return fail(res,e)}}
-export async function events(req:Request,res:Response){try{return res.json({success:true,...await s.listEvents(req.query)})}catch(e){return fail(res,e)}}
+export async function events(req:Request,res:Response){const parsed=eventQuerySchema.safeParse(req.query);if(!parsed.success)return res.status(400).json({success:false,error:{code:"VALIDATION_ERROR",message:"Invalid event filters"}});try{return res.json({success:true,...await s.listEvents(parsed.data)})}catch(e){return fail(res,e)}}
 export async function event(req:Request,res:Response){try{return res.json({success:true,data:await s.eventBySlug(String(req.params.slug))})}catch(e){return fail(res,e)}}
 export async function eventCreate(req:AuthenticatedRequest,res:Response){const d=parse(res,eventSchema,req.body);if(!d)return;try{return res.status(201).json({success:true,data:await s.createEvent(req.user!.id,d)})}catch(e){return fail(res,e)}}
 export async function eventPublish(req:AuthenticatedRequest,res:Response){try{return res.json({success:true,data:await s.publishEvent(req.user!.id,String(req.params.id),req.user!.role==='ADMIN')})}catch(e){return fail(res,e)}}

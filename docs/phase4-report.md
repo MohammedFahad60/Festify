@@ -1,41 +1,70 @@
-# Phase 4 report — backend API completion increment
+# Phase 4 final quality pass
+
+## Implemented
+
+- Complete versioned backend route inventory for auth, users, categories, events, ticket types, registrations, tickets, QR, validation, check-ins, organizer, and admin domains.
+- Event discovery query validation and server-side filters: search, category, city, date range, price range, featured, sort, pagination, bounded limits.
+- Shared Zod contracts for event queries and ticket-type updates.
+- Safe DTO and authorization review for user/ticket/attendee paths.
+- Final active-admin protection for role and status changes.
+- PNG QR generation from opaque QR values only.
+- Transactional check-in design with row locking and unique ticket constraint.
+- OpenAPI route at `/api/v1/openapi.json` and non-production docs route at `/api/v1/docs`.
+- Added `typecheck` and `db:validate` scripts.
+- Added Phase 4 validation tests in `apps/api/src/__tests__/phase4-quality.test.ts`.
 
 ## Verified
 
-- `npm run build` passed for API, validation package, and web.
-- `npm run lint` passed.
-- `git diff --check` passed.
-- Authentication primitive tests from Phase 3 passed.
-- OpenAPI JSON and non-production docs routes are implemented.
+Passed:
 
-## Implemented in this increment
+```text
+npm run typecheck
+npm run lint
+npm run build
+git diff --check
+DATABASE_URL=... JWT_SECRET=... npm test --workspace=@festify/api -- --run src/__tests__/phase4-quality.test.ts src/__tests__/auth-crypto.test.ts
+```
 
-- Ticket ownership/admin/organizer access and safe ticket DTOs.
-- PNG QR generation using `qrcode`; QR payload contains only the opaque QR token.
-- Ticket validation.
-- Single and bulk check-in with transactional row locking and the unique ticket check-in constraint.
-- Event check-in listing.
-- Ticket-type update and safe deactivation/delete behavior.
-- Event statistics and paginated attendees.
-- Organizer profile and aggregated dashboard endpoints.
-- Admin overview, users listing, role/status management, organizer verification, event feature management, review moderation, notifications broadcast, and audit log listing.
-- OpenAPI JSON at `/api/v1/openapi.json` and documentation page at `/api/v1/docs`.
-- Added ticket check-in `method` and `gate` schema fields.
+Static result: 2 test files, 6 tests passed.
 
-## Implemented but database-unverified
+## Database workflow attempt
 
-All new ticket, check-in, organizer, admin, statistics, attendee, broadcast, and OpenAPI-backed database paths remain unverified against PostgreSQL. Check-in concurrency design uses a transaction with `FOR UPDATE` and the database unique constraint, but the race condition has not been executed against PostgreSQL.
+The supported workflow was attempted once:
 
-## Blocked
+```text
+npm run db:validate
+```
 
-Docker is unavailable in the environment (`docker: command not found`). Prisma generation was attempted once using the supported workflow and remains blocked by the Prisma engine download:
+This script was added during this pass, but Prisma tooling remains blocked by the engine download. `db:migrate` and `db:seed` were also attempted with `DATABASE_URL` set and failed before database execution.
+
+Docker remains unavailable:
+
+```text
+/bin/bash: docker: command not found
+```
+
+Prisma remains blocked by:
 
 ```text
 Error: request to https://binaries.prisma.sh/all_commits/e922089b7d7502aff4249d5da3420f6fa55fc6ad/debian-openssl-3.0.x/schema-engine.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
 ```
 
-Therefore migration deployment, seed, Prisma client generation, and database-backed API tests are not claimed as passed.
+## Unverified
 
-## Remaining quality work
+The full database-backed suite, migrations, seed, Prisma generated client, PostgreSQL transaction behavior, registration concurrency, inventory concurrency, check-in race behavior, and referential-integrity behavior remain unverified. The full Vitest suite was attempted and remains blocked by the generated Prisma client stub; the run reported 2 passing test files and 11 blocked/failing database-dependent suites.
 
-The OpenAPI document currently describes the implemented route surface and security requirements but uses lightweight response/request descriptions. Full schema-derived OpenAPI components, comprehensive integration tests, audit metadata enrichment across every mutation, and a complete clean-PostgreSQL verification remain recommended once infrastructure access is restored.
+## Security review
+
+- Session-derived ownership is used for user, organizer, ticket, attendee, statistics, and check-in paths.
+- Admin middleware protects admin routes.
+- Final-admin role/status protection is server-side.
+- Safe ticket and attendee DTOs avoid password hashes and session/token fields.
+- QR content is opaque and does not contain personal data.
+- Check-in uses row locking plus the database uniqueness constraint.
+- Public event status is restricted to published events.
+
+## Remaining genuine limitation
+
+Database infrastructure is unavailable, so PostgreSQL verification cannot be claimed. OpenAPI contains the implemented path inventory and cookie security requirements; request/response schemas remain lightweight and should be expanded when the API contracts stabilize. Full domain integration tests remain preserved in the repository for execution once PostgreSQL/Prisma access is restored.
+
+Phase 5 frontend work should begin only after the database-backed suite can run successfully.
