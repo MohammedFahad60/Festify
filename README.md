@@ -2,7 +2,7 @@
 
 Full-stack MVP for festival discovery, ordering, and check-in. **Do not rebuild** — this repo is harden-and-ship.
 
-> For the supported Windows/macOS/Linux PostgreSQL verification workflow, see [`docs/local-development.md`](docs/local-development.md).
+> For the supported Windows/macOS/Linux PostgreSQL verification workflow, see [`docs/local-development.md`](docs/local-development.md). For the frontend foundation, see [`docs/frontend-foundation.md`](docs/frontend-foundation.md).
 
 - **Backend** `apps/api` — Express 5 + TypeScript 5.9 + Prisma 7 (PostgreSQL via `@prisma/adapter-pg` + driverAdapters) + Zod + JWT (httpOnly cookie) + bcrypt
 - **Frontend** `apps/web` — Next.js 16.3.1 (Turbopack) + React 19 + Tailwind 4 + `credentials: include` rewrites
