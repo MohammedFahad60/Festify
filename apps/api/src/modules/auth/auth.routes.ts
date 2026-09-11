@@ -1,18 +1,19 @@
 import { Router } from "express";
-import {
-  login,
-  logout,
-  me,
-  register,
-} from "./auth.controller.js";
+import { register, login, logout, refresh, me, forgot, reset, verify, change, organizerUpgrade } from "./auth.controller.js";
 import { requireAuth } from "../../middleware/auth.js";
 import { rateLimit } from "../../middleware/rate-limit.js";
-
+const emailKey = (req: any) => String(req.body?.email ?? req.ip ?? "unknown").toLowerCase();
+const authLimit = rateLimit({ windowMs: 60_000, max: 10, keyGenerator: emailKey });
+const ipLimit = rateLimit({ windowMs: 60_000, max: 30, keyGenerator: (req) => req.ip || "global" });
 const router = Router();
-
-router.post("/register", rateLimit({ windowMs: 60_000, max: 10, keyGenerator: (req) => req.ip || "global" }), register);
-router.post("/login", rateLimit({ windowMs: 60_000, max: 10, keyGenerator: (req) => req.ip || "global" }), login);
+router.post("/register", ipLimit, authLimit, register);
+router.post("/login", ipLimit, authLimit, login);
 router.post("/logout", logout);
+router.post("/refresh", refresh);
 router.get("/me", requireAuth, me);
-
+router.post("/forgot-password", ipLimit, authLimit, forgot);
+router.post("/reset-password", ipLimit, reset);
+router.post("/verify-email", verify);
+router.post("/change-password", requireAuth, change);
+router.post("/organizer", requireAuth, organizerUpgrade);
 export default router;
