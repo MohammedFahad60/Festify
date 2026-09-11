@@ -291,3 +291,9 @@ CREATE TABLE "email_outbox" (
 "lastError" text,
 "createdAt" timestamptz(3) NOT NULL DEFAULT 'now('
 );
+
+-- Authentication columns added by Phase 3.
+ALTER TABLE "user" ADD COLUMN IF NOT EXISTS "email_verified_at" timestamptz(3);
+ALTER TABLE "session" ADD COLUMN IF NOT EXISTS "family_id" text;
+ALTER TABLE "session" ADD COLUMN IF NOT EXISTS "ip_address" text;
+ALTER TABLE "session" ADD COLUMN IF NOT EXISTS "user_agent" text;
