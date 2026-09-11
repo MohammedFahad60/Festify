@@ -1,46 +1,41 @@
-# Phase 4 report — core backend APIs
-
-## Database verification
-
-A focused environment check was performed first. `docker --version` failed because Docker is not installed (`/bin/bash: docker: command not found`). The supported Prisma workflow was then attempted with `DATABASE_URL` set:
-
-```text
-npm run db:generate
-Error: request to https://binaries.prisma.sh/all_commits/e922089b7d7502aff4249d5da3420f6fa55fc6ad/debian-openssl-3.0.x/schema-engine.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
-```
-
-There was therefore no real PostgreSQL migration, seed, or database-backed integration verification in this phase.
-
-## Implemented
-
-- User profile retrieval/update and safe account deactivation.
-- Categories read/admin mutation routes with validation, sort order, uniqueness handling, and restrict-aware deletion errors.
-- Public event discovery, featured discovery, slug details, organizer/admin creation, ownership-checked update, publish, cancel, and lifecycle-safe delete behavior.
-- Ticket-type listing and owner/admin creation with server-side validation.
-- Favorites, notifications, notification read state, and reviews.
-- Registration creation with a PostgreSQL transaction, event/ticket locking, server-side pricing, inventory/capacity checks, registration items, tickets, internal payment stub, notification, and duplicate registration protection.
-- Registration listing, detail, ticket listing, and cancellation.
-- Shared schemas added to `packages/validation`.
+# Phase 4 report — backend API completion increment
 
 ## Verified
 
-- `npm run build --workspace=@festify/api`
-- `npm run lint`
-- `git diff --check`
+- `npm run build` passed for API, validation package, and web.
+- `npm run lint` passed.
+- `git diff --check` passed.
+- Authentication primitive tests from Phase 3 passed.
+- OpenAPI JSON and non-production docs routes are implemented.
 
-These are code/static checks only and do not prove database behavior.
+## Implemented in this increment
+
+- Ticket ownership/admin/organizer access and safe ticket DTOs.
+- PNG QR generation using `qrcode`; QR payload contains only the opaque QR token.
+- Ticket validation.
+- Single and bulk check-in with transactional row locking and the unique ticket check-in constraint.
+- Event check-in listing.
+- Ticket-type update and safe deactivation/delete behavior.
+- Event statistics and paginated attendees.
+- Organizer profile and aggregated dashboard endpoints.
+- Admin overview, users listing, role/status management, organizer verification, event feature management, review moderation, notifications broadcast, and audit log listing.
+- OpenAPI JSON at `/api/v1/openapi.json` and documentation page at `/api/v1/docs`.
+- Added ticket check-in `method` and `gate` schema fields.
 
 ## Implemented but database-unverified
 
-All newly added services using Prisma/raw parameterized queries, registration concurrency behavior, referential-integrity behavior, migrations, seed data, and database-backed API tests remain unverified until Prisma engine access and PostgreSQL are available.
+All new ticket, check-in, organizer, admin, statistics, attendee, broadcast, and OpenAPI-backed database paths remain unverified against PostgreSQL. Check-in concurrency design uses a transaction with `FOR UPDATE` and the database unique constraint, but the race condition has not been executed against PostgreSQL.
 
-## Remaining blockers
+## Blocked
 
-- Docker unavailable.
-- Prisma engine download unavailable.
-- Generated Prisma client remains unavailable.
-- OpenAPI document/docs endpoint and complete admin/organizer/ticket/check-in API surface remain for the next backend increment.
+Docker is unavailable in the environment (`docker: command not found`). Prisma generation was attempted once using the supported workflow and remains blocked by the Prisma engine download:
 
-## Next phase
+```text
+Error: request to https://binaries.prisma.sh/all_commits/e922089b7d7502aff4249d5da3420f6fa55fc6ad/debian-openssl-3.0.x/schema-engine.gz.sha256 failed, reason: Client network socket disconnected before secure TLS connection was established
+```
 
-Restore PostgreSQL/Prisma execution, validate the migration on a clean database, then finish remaining organizer/admin/ticket/check-in endpoints and OpenAPI synchronization before frontend work.
+Therefore migration deployment, seed, Prisma client generation, and database-backed API tests are not claimed as passed.
+
+## Remaining quality work
+
+The OpenAPI document currently describes the implemented route surface and security requirements but uses lightweight response/request descriptions. Full schema-derived OpenAPI components, comprehensive integration tests, audit metadata enrichment across every mutation, and a complete clean-PostgreSQL verification remain recommended once infrastructure access is restored.

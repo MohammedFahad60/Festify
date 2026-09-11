@@ -298,3 +298,5 @@ ALTER TABLE "session" ADD COLUMN IF NOT EXISTS "family_id" text;
 ALTER TABLE "session" ADD COLUMN IF NOT EXISTS "ip_address" text;
 ALTER TABLE "session" ADD COLUMN IF NOT EXISTS "user_agent" text;
 ALTER TABLE "category" ADD COLUMN IF NOT EXISTS "sort_order" integer NOT NULL DEFAULT 0;
+ALTER TABLE "check_in" ADD COLUMN IF NOT EXISTS "method" text NOT NULL DEFAULT 'QR';
+ALTER TABLE "check_in" ADD COLUMN IF NOT EXISTS "gate" text;

@@ -350,6 +350,8 @@ model CheckIn {
   id String @id @default(uuid())
   ticketId String @unique @map("ticket_id")
   operatorId String @map("operator_id")
+  method String @default("QR") @map("method")
+  gate String? @map("gate")
   checkedInAt DateTime @default(now()) @db.Timestamptz(3) @map("checked_in_at")
   status CheckInStatus @default(VALID) @map("status")
   ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
