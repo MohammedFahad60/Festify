@@ -11,6 +11,8 @@ import orderRoutes from "../modules/order/order.routes.js";
 import paymentRoutes from "../modules/payment/payment.routes.js";
 import ticketRoutes from "../modules/ticket/ticket.routes.js";
 import catalogRoutes from "../modules/catalog/catalog.routes.js";
+import coreRoutes from "../modules/core/core.routes.js";
+import registrationRoutes from "../modules/registration/registration.routes.js";
 
 import testRoutes from "./test.routes.js";
 
@@ -45,6 +47,8 @@ router.use(ticketTypeRoutes);
 router.use("/orders", orderRoutes);
 router.use("/payments", paymentRoutes);
 router.use("/tickets", ticketRoutes);
+router.use(coreRoutes);
+router.use(registrationRoutes);
 router.use("/catalog", catalogRoutes);
 
 export default router;

@@ -297,3 +297,4 @@ ALTER TABLE "user" ADD COLUMN IF NOT EXISTS "email_verified_at" timestamptz(3);
 ALTER TABLE "session" ADD COLUMN IF NOT EXISTS "family_id" text;
 ALTER TABLE "session" ADD COLUMN IF NOT EXISTS "ip_address" text;
 ALTER TABLE "session" ADD COLUMN IF NOT EXISTS "user_agent" text;
+ALTER TABLE "category" ADD COLUMN IF NOT EXISTS "sort_order" integer NOT NULL DEFAULT 0;

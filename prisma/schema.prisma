@@ -82,6 +82,7 @@ model Category {
   id String @id @default(uuid())
   name String @unique @map("name")
   slug String @unique @map("slug")
+  sortOrder Int @default(0) @map("sort_order")
   status CategoryStatus @default(ACTIVE) @map("status")
   createdAt DateTime @default(now()) @db.Timestamptz(3) @map("created_at")
   updatedAt DateTime @updatedAt @db.Timestamptz(3) @map("updated_at")
