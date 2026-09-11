@@ -1,0 +1,5 @@
+export const discoverySorts=["created","date","title","price"] as const;
+export type DiscoverySort=typeof discoverySorts[number];
+const nonNegative=/^\d+(\.\d+)?$/;
+export function normalizeDiscoveryParams(source:URLSearchParams){const next=new URLSearchParams();const allowed=["search","category","city","dateFrom","dateTo","priceMin","priceMax","featured","sort","order","page"];for(const key of allowed){const value=source.get(key);if(value)next.set(key,value)}if(!discoverySorts.includes((next.get("sort")??"created") as DiscoverySort))next.delete("sort");if(next.get("order")!=="asc"&&next.get("order")!=="desc")next.delete("order");for(const key of ["priceMin","priceMax"]){if(next.has(key)&&!nonNegative.test(next.get(key)!))next.delete(key)}const page=Number(next.get("page"));if(next.has("page")&&(!Number.isInteger(page)||page<1))next.delete("page");return next}
+export function discoveryQuery(source:URLSearchParams){const params=normalizeDiscoveryParams(source);return Object.fromEntries(params.entries())}

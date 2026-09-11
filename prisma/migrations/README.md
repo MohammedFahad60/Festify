@@ -1,17 +1,11 @@
-# Migrations
+# Prisma migrations
 
-This directory will contain Prisma migrations once `npx prisma migrate dev` is run with a real database.
+The initial migration is `00000000000000_init/migration.sql`. Apply it to a clean PostgreSQL 16 database with:
 
-For now it exists to satisfy `prisma.config.ts` and `migrate status`.
-
-To create the initial migration (requires DATABASE_URL and network for engines):
-
-```
-npx prisma migrate dev --name init
+```text
+npm run db:deploy
 ```
 
-In CI/production, apply with:
+For local development, `npm run db:migrate -- --name descriptive-change` creates a new migration after the Prisma engine is available. Never use `migrate reset` against shared or production databases.
 
-```
-npx prisma migrate deploy
-```
+If Prisma cannot download its engine from `https://binaries.prisma.sh`, generation/validation/migration commands cannot be considered verified. See `docs/local-development.md`.

@@ -1,0 +1,1 @@
+export async function shareEvent(title:string,url:string){if(typeof navigator!=="undefined"&&typeof navigator.share==="function"){await navigator.share({title,url});return "shared" as const}if(typeof navigator!=="undefined"&&navigator.clipboard){await navigator.clipboard.writeText(url);return "copied" as const}return "unavailable" as const}

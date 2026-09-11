@@ -2,6 +2,8 @@
 
 Full-stack MVP for festival discovery, ordering, and check-in. **Do not rebuild** — this repo is harden-and-ship.
 
+> For the supported Windows/macOS/Linux PostgreSQL verification workflow, see [`docs/local-development.md`](docs/local-development.md). For the frontend foundation, see [`docs/frontend-foundation.md`](docs/frontend-foundation.md). For event discovery routes and API behavior, see [`docs/event-discovery.md`](docs/event-discovery.md). For organizer event management, see [`docs/event-management.md`](docs/event-management.md).
+
 - **Backend** `apps/api` — Express 5 + TypeScript 5.9 + Prisma 7 (PostgreSQL via `@prisma/adapter-pg` + driverAdapters) + Zod + JWT (httpOnly cookie) + bcrypt
 - **Frontend** `apps/web` — Next.js 16.3.1 (Turbopack) + React 19 + Tailwind 4 + `credentials: include` rewrites
 - **Roles** `ATTENDEE` / `ORGANIZER` / `ADMIN` / `STAFF`
@@ -35,7 +37,7 @@ Festival lifecycle: `DRAFT → SUBMITTED → UNDER_REVIEW → APPROVED → PUBLI
 
 ## Requirements
 
-- **Node** 20+ (see `package.json` workspaces `apps/*`)
+- **Node** 22.x (see `docs/local-development.md`)
 - **PostgreSQL** 14+ — project uses `provider = "postgresql"`; SQLite is not supported. `DATABASE_URL` and `TEST_DATABASE_URL` both point to Postgres.
 - Network for `prisma generate` / `migrate` (fetches engines from `binaries.prisma.sh`). Offline builds use committed stub `apps/api/src/generated/prisma/{client.js,client.d.ts}` for `tsc` only — real DB tests require generation.
 
@@ -47,7 +49,8 @@ See `.env.example` (no real secrets):
 DATABASE_URL="postgresql://user:password@localhost:5432/festify"
 TEST_DATABASE_URL="postgresql://user:password@localhost:5432/festify_test"
 JWT_SECRET="change-me-to-a-strong-random-secret-at-least-32-characters"
-JWT_EXPIRES_IN="7d"
+JWT_EXPIRES_IN="15m"
+AUTH_DEV_TOKENS="true"
 API_PORT=4000
 CORS_ORIGIN="http://localhost:3000"
 NODE_ENV="development"
@@ -60,7 +63,7 @@ NEXT_PUBLIC_API_URL="http://localhost:4000"
 
 ## Database Setup
 
-Initial migration has not been committed yet — `prisma/migrations` contains `README.md` only. With a live Postgres:
+The initial migration is in `prisma/migrations/00000000000000_init`. With a live PostgreSQL 16 instance, follow the complete cross-platform workflow in [`docs/local-development.md`](local-development.md):
 
 ```bash
 # 1. configure .env (above)
@@ -139,7 +142,7 @@ Previous verified: `api tsc 0`, `web tsc 0`, `eslint 0`, `next build 16 routes`.
 
 ## API / Security Notes
 
-- **Auth cookie** `festify_token` — `httpOnly:true`, `secure: NODE_ENV===production`, `sameSite:lax`, `maxAge 7d`, `path /`. 401 on missing/invalid/INACTIVE. Roles via `requireRole`.
+- **Auth cookies** `festify_access` (HS256, 15m) and `festify_refresh` (rotating opaque token, 30d) — both httpOnly, secure in production. 401 on missing/invalid/INACTIVE. Roles via `requireRole`.
 - **CORS** `cors({ origin: env.corsOrigin, credentials:true })` — `CORS_ORIGIN` env, no wildcard. `helmet` enabled.
 - **Validation** Zod for all inputs, UUID `z.string().uuid()`, `quantity int positive`, no trust of client `price/total/soldQuantity/status/userId`.
 - **Inventory** atomic `updateMany where soldQuantity <= quantity - q` + `Serializable` + `P2034→409`.

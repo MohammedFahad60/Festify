@@ -1,0 +1,1 @@
+import Link from "next/link";import {Card,Button} from "@/components/ui";export default function NotFound(){return <Card className="p-10 text-center"><h1 className="text-3xl font-semibold">Page not found</h1><p className="text-stone-500 mt-2">The page you requested does not exist.</p><Link href="/"><Button className="mt-6">Return home</Button></Link></Card>}
