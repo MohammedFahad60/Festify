@@ -25,8 +25,20 @@ const ticketSelect = {
           venue: true,
         },
       },
+      event: {
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          startsAt: true,
+          endsAt: true,
+          city: true,
+          venue: true,
+        },
+      },
     },
   },
+  registration: { select: { id: true, bookingReference: true, status: true, total: true } },
   order: {
     select: {
       id: true,

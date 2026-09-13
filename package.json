@@ -11,7 +11,19 @@
     "dev:web": "npm run dev --workspace=@festify/web",
     "dev:api": "npm run dev --workspace=@festify/api",
     "build": "npm run build --workspaces",
-    "lint": "npm run lint --workspaces --if-present"
+    "test": "npm test --workspaces --if-present",
+    "typecheck": "npm run build --workspace=@festify/api && npm run build --workspace=@festify/validation",
+    "lint": "npm run lint --workspaces --if-present",
+    "db:start": "docker compose up -d postgres",
+    "db:stop": "docker compose down",
+    "db:generate": "prisma generate",
+    "db:validate": "prisma validate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "prisma db seed",
+    "db:reset": "prisma migrate reset --force",
+    "db:studio": "prisma studio",
+    "db:offline": "tsx scripts/pglite.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.1",
@@ -21,11 +33,14 @@
     "dotenv": "^17.4.2",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.23.0",
-    "prisma": "^7.9.1"
+    "prisma": "^7.9.1",
+    "qrcode": "^1.5.4"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.4.3",
     "@types/bcrypt": "^6.0.0",
     "@types/cookie-parser": "^1.4.10",
-    "@types/pg": "^8.23.1"
+    "@types/pg": "^8.23.1",
+    "@types/qrcode": "^1.5.6"
   }
 }

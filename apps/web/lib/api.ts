@@ -1,83 +1,10 @@
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-
-type FetchOptions = RequestInit & { params?: Record<string, string> };
-
-async function request<T>(path: string, opts: FetchOptions = {}): Promise<{ success: boolean; data?: T; message?: string; errors?: unknown; status?: number }> {
-  const url = path.startsWith("http") ? path : `${API_URL}${path}`;
-  const res = await fetch(url, {
-    ...opts,
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...(opts.headers || {}),
-    },
-  });
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    return { success: false, status: res.status, message: json.message || `Request failed: ${res.status}`, ...json };
-  }
-  return { success: true, status: res.status, ...json };
-}
-
-export const api = {
-  get: <T>(path: string, opts?: FetchOptions) => request<T>(path, { ...opts, method: "GET" }),
-  post: <T>(path: string, body?: unknown, opts?: FetchOptions) => request<T>(path, { ...opts, method: "POST", body: body ? JSON.stringify(body) : undefined }),
-  patch: <T>(path: string, body?: unknown, opts?: FetchOptions) => request<T>(path, { ...opts, method: "PATCH", body: body ? JSON.stringify(body) : undefined }),
-  del: <T>(path: string, opts?: FetchOptions) => request<T>(path, { ...opts, method: "DELETE" }),
-};
-
-export function friendlyError(message?: string, status?: number) {
-  if (!message) return "Something went wrong. Please try again.";
-  const lower = message.toLowerCase();
-  if (lower.includes("not authenticated") || status === 401) return "Please sign in to continue.";
-  if (lower.includes("forbidden") || lower.includes("not have permission") || status === 403) return "You don’t have permission to do that.";
-  if (lower.includes("festival is not published")) return "This festival isn’t available for purchase yet.";
-  if (lower.includes("festival has already ended")) return "This festival has ended.";
-  if (lower.includes("sales are not currently active")) return "Ticket sales aren’t active right now.";
-  if (lower.includes("maximum tickets per user")) return "You’ve reached the purchase limit for this ticket type.";
-  if (lower.includes("not enough tickets")) return "Not enough tickets left — try a smaller quantity.";
-  if (lower.includes("order has already been")) return "This order has already been processed.";
-  if (lower.includes("payment has already been completed")) return "This payment is already completed.";
-  if (lower.includes("ticket has already been used")) return "This ticket has already been checked in.";
-  if (lower.includes("ticket has been cancelled")) return "This ticket was cancelled.";
-  if (lower.includes("order is not confirmed")) return "Order isn’t confirmed yet.";
-  if (lower.includes("only pending orders can be")) return "Only pending orders can be changed.";
-  if (lower.includes("insufficient")) return message;
-  return message;
-}
-
-export type Festival = {
-  id: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  banner: string | null;
-  startDate: string;
-  endDate: string;
-  status: string;
-  category: { name: string; slug: string };
-  venue: { name: string; city: string; state: string };
-  organizer: { organizationName: string };
-  ticketTypes?: Array<{
-    id: string;
-    name: string;
-    price: string | number;
-    quantity: number;
-    soldQuantity: number;
-    status?: string;
-    saleStart?: string;
-    saleEnd?: string;
-    maxPerUser?: number | null;
-  }>;
-};
-
-export type Order = {
-  id: string;
-  status: string;
-  totalAmount: string | number;
-  createdAt: string;
-  festival?: { name: string };
-  items?: Array<{ id: string; quantity: number; unitPrice: string; totalPrice: string; ticketType?: { name: string } }>;
-  payments?: Array<{ status: string }>;
-  tickets?: Array<{ id: string; ticketCode: string; status: string }>;
-};
+import type { ApiResponse } from "@festify/types";
+export type { DiscoveryEvent, DiscoveryTicketType, EventListResponse, PaginationMeta, User } from "@festify/types";
+export type Festival = {id:string;name:string;slug:string;description:string|null;banner:string|null;startDate:string;endDate:string;status:string;category:{name:string;slug:string};venue:{name:string;city:string;state:string};organizer:{organizationName:string};ticketTypes?:Array<{id:string;name:string;price:string|number;quantity:number;soldQuantity:number;status?:string;saleStart?:string;saleEnd?:string;maxPerUser?:number|null}>};
+export type Order = {id:string;status:string;totalAmount:string|number;createdAt:string;festival?:{name:string};items?:Array<{id:string;quantity:number;unitPrice:string;totalPrice:string;ticketType?:{name:string}}>;payments?:Array<{status:string}>;tickets?:Array<{id:string;ticketCode:string;status:string}>};
+export type FetchOptions = Omit<globalThis.RequestInit, "body"> & { params?: Record<string, string | number | boolean | undefined>; body?: unknown; retryAuth?: boolean };
+function makeUrl(path:string, params?:FetchOptions["params"]){const query=new URLSearchParams();Object.entries(params??{}).forEach(([key,value])=>value!==undefined&&query.set(key,String(value)));const suffix=query.toString();return suffix?`${path}${path.includes("?")?"&":"?"}${suffix}`:path;}
+async function parse<T>(response:Response):Promise<ApiResponse<T>>{const data=await response.json().catch(()=>undefined);if(data&&typeof data==="object")return {...data,status:response.status} as ApiResponse<T>;return {success:false,error:{code:response.status===401?"UNAUTHENTICATED":"INTERNAL_ERROR",message:"The server returned an invalid response."}};}
+async function request<T>(path:string,options:FetchOptions={},retry=true):Promise<ApiResponse<T>>{const headers=new Headers(options.headers);if(options.body!==undefined&&!headers.has("content-type"))headers.set("content-type","application/json");headers.set("accept","application/json");const response=await fetch(makeUrl(path,options.params),{...options,headers,body:options.body===undefined?undefined:JSON.stringify(options.body),credentials:"include"});if(response.status===401&&retry&&path!=="/api/v1/auth/refresh"&&path!=="/api/v1/auth/login"){const refreshed=await request<null>("/api/v1/auth/refresh",{method:"POST"},false);if(refreshed.success)return request<T>(path,options,false);}return parse<T>(response);}
+export const api={get:<T>(path:string,options?:FetchOptions)=>request<T>(path,{...options,method:"GET"}),post:<T>(path:string,body?:unknown,options?:FetchOptions)=>request<T>(path,{...options,method:"POST",body}),put:<T>(path:string,body?:unknown,options?:FetchOptions)=>request<T>(path,{...options,method:"PUT",body}),patch:<T>(path:string,body?:unknown,options?:FetchOptions)=>request<T>(path,{...options,method:"PATCH",body}),del:<T>(path:string,options?:FetchOptions)=>request<T>(path,{...options,method:"DELETE"})};
+export function friendlyError(response:ApiResponse<unknown>|string|undefined,status?:number){if(typeof response === "string" || response === undefined){if(status===401)return "Please sign in to continue.";if(status===403)return "You do not have permission to do that.";return response||"Something went wrong. Please try again.";}if(response.error?.code==="UNAUTHENTICATED")return "Please sign in to continue.";if(response.error?.code==="FORBIDDEN")return "You do not have permission to do that.";if(response.error?.code==="VALIDATION_ERROR")return response.error.message||"Check the highlighted fields.";return response.error?.message||"Something went wrong. Please try again.";}

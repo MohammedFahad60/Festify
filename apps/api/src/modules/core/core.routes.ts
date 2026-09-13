@@ -1,0 +1,11 @@
+import { Router } from "express";
+import * as c from "./core.controller.js";
+import { requireAuth } from "../../middleware/auth.js";
+import { requireRole, requireRoles } from "../../middleware/roles.js";
+const r=Router();
+r.get("/categories",c.categories);r.post("/categories",requireAuth,requireRole("ADMIN"),c.categoryCreate);r.patch("/categories/:id",requireAuth,requireRole("ADMIN"),c.categoryUpdate);r.delete("/categories/:id",requireAuth,requireRole("ADMIN"),c.categoryDelete);
+r.get("/events",c.events);r.get("/events/featured",(req,res)=>{req.query.featured="true";return c.events(req,res)});r.get("/events/mine",requireAuth,requireRoles("ORGANIZER","ADMIN"),c.myEvents);r.get("/events/manage/:id",requireAuth,requireRoles("ORGANIZER","ADMIN"),c.managedEvent);r.get("/events/:slug",c.event);r.post("/events",requireAuth,requireRoles("ADMIN","ORGANIZER"),c.eventCreate);r.patch("/events/:id",requireAuth,requireRoles("ADMIN","ORGANIZER"),c.eventUpdate);r.delete("/events/:id",requireAuth,requireRoles("ADMIN","ORGANIZER"),c.eventDelete);r.post("/events/:id/publish",requireAuth,requireRoles("ADMIN","ORGANIZER"),c.eventPublish);r.post("/events/:id/cancel",requireAuth,requireRoles("ADMIN","ORGANIZER"),c.eventCancel);
+r.get("/events/:eventId/ticket-types",c.ticketTypes);r.post("/events/:eventId/ticket-types",requireAuth,requireRoles("ADMIN","ORGANIZER"),c.ticketTypeCreate);
+r.get("/events/:id/reviews",c.reviews);r.post("/events/:id/reviews",requireAuth,c.reviewCreate);
+r.get("/users/me",requireAuth,c.profile);r.patch("/users/me",requireAuth,c.profileUpdate);r.delete("/users/me",requireAuth,c.profileDelete);r.get("/users/me/favorites",requireAuth,c.favorites);r.post("/users/me/favorites/:eventId",requireAuth,c.favoriteAdd);r.delete("/users/me/favorites/:eventId",requireAuth,c.favoriteRemove);r.get("/users/me/notifications",requireAuth,c.notifications);r.patch("/users/me/notifications/:id/read",requireAuth,c.notificationRead);
+export default r;

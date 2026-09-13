@@ -1,0 +1,15 @@
+import { Router } from "express";
+import { requireAuth } from "../../middleware/auth.js";
+import { prisma } from "../../lib/prisma.js";
+import { createRegistration, cancelRegistration } from "./registration.service.js";
+const db=prisma as any;
+const r=Router();
+const fail=(res:any,e:any)=>res.status(e.status??500).json({success:false,error:{code:e.code??"INTERNAL_ERROR",message:e.message??"Internal server error"}});
+const registrationSelect=`r.id,r.booking_reference,r.status,r.total,r.created_at,r.updated_at,e.id AS event_id,e.title AS event_title,e.slug AS event_slug,e.starts_at,e.ends_at,e.city,p.status AS payment_status,COUNT(DISTINCT t.id)::int AS ticket_count`;
+const group=`GROUP BY r.id,e.id,p.status`;
+r.post("/registrations",requireAuth,async(req:any,res)=>{try{return res.status(201).json({success:true,data:await createRegistration(req.user.id,req.body)})}catch(e){return fail(res,e)}});
+r.get("/registrations",requireAuth,async(req:any,res)=>{try{const rows=await db.$queryRawUnsafe(`SELECT ${registrationSelect} FROM "registration" r JOIN "event" e ON e.id=r.event_id LEFT JOIN "payment" p ON p.registration_id=r.id LEFT JOIN "ticket" t ON t.registration_id=r.id WHERE r.user_id=$1 ${group} ORDER BY r.created_at DESC`,req.user.id);return res.json({success:true,data:rows})}catch(e){return fail(res,e)}});
+r.get("/registrations/:id",requireAuth,async(req:any,res)=>{try{const rows=await db.$queryRawUnsafe(`SELECT ${registrationSelect} FROM "registration" r JOIN "event" e ON e.id=r.event_id LEFT JOIN "payment" p ON p.registration_id=r.id LEFT JOIN "ticket" t ON t.registration_id=r.id WHERE r.id=$1 AND r.user_id=$2 ${group}`,String(req.params.id),req.user.id);if(!rows[0])return res.status(404).json({success:false,error:{code:"NOT_FOUND",message:"Registration not found"}});return res.json({success:true,data:rows[0]})}catch(e){return fail(res,e)}});
+r.get("/registrations/:id/tickets",requireAuth,async(req:any,res)=>{try{const rows=await db.$queryRaw`SELECT t.id,t.ticket_number,t.ticket_code,t.status,t.created_at,tt.name AS ticket_type_name,e.title AS event_title,e.slug AS event_slug,e.starts_at,e.ends_at,e.city,v.name AS venue_name FROM "ticket" t JOIN "registration" r ON r.id=t.registration_id JOIN "ticket_type" tt ON tt.id=t.ticket_type_id JOIN "event" e ON e.id=tt.event_id LEFT JOIN "venue" v ON v.id=e.venue_id WHERE t.registration_id=${String(req.params.id)} AND r.user_id=${req.user!.id} ORDER BY t.created_at`;return res.json({success:true,data:rows})}catch(e){return fail(res,e)}});
+r.post("/registrations/:id/cancel",requireAuth,async(req:any,res)=>{try{return res.json({success:true,data:await cancelRegistration(req.user.id,String(req.params.id))})}catch(e){return fail(res,e)}});
+export default r;

@@ -23,7 +23,9 @@ for (const key of requiredEnv) {
 export const env = {
   databaseUrl: process.env.DATABASE_URL!,
   jwtSecret: process.env.JWT_SECRET!,
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
+  jwtExpiresIn: "15m",
   port: Number(process.env.API_PORT) || 4000,
   corsOrigin: process.env.CORS_ORIGIN || "http://localhost:3000",
+  nodeEnv: process.env.NODE_ENV || "development",
+  devTokens: process.env.AUTH_DEV_TOKENS === "true" || process.env.NODE_ENV !== "production",
 };

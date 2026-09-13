@@ -15,7 +15,7 @@ import { PrismaClient } from "../../generated/prisma/client.js";
 const DATABASE_URL =
   process.env.TEST_DATABASE_URL ||
   process.env.DATABASE_URL ||
-  "postgresql://postgres:admin@localhost:5432/festify";
+  "postgresql://postgres:postgres@localhost:5432/festify_test";
 
 const adapter = new PrismaPg({ connectionString: DATABASE_URL });
 
